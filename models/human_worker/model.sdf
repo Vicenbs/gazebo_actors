@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="human_worker">
+    <pose>0 0 0 0 0 0</pose>
+
+    <!-- Main Human Body Link (Kinematic on slopes so it never falls over) -->
+    <link name="base_link">
+      <pose>0 0 0 0 0 0</pose>
+      <kinematic>true</kinematic>
+      <inertial>
+        <pose>0 0 0.85 0 0 0</pose>
+        <mass>75.0</mass>
+        <inertia>
+          <ixx>15.0</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>15.0</iyy>
+          <iyz>0.0</iyz>
+          <izz>2.5</izz>
+        </inertia>
+      </inertial>
+
+      <!-- 3D Visual Mesh of the Human Worker -->
+      <visual name="human_visual">
+        <pose>0 0 0.85 0 0 1.5708</pose>
+        <geometry>
+          <mesh>
+            <uri>model://human_worker/meshes/stand.dae</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <!-- Physical Human Body Collision (Torso, head, and legs) -->
+      <collision name="human_collision">
+        <pose>0 0 0.85 0 0 0</pose>
+        <geometry>
+          <capsule>
+            <radius>0.26</radius>
+            <length>1.70</length>
+          </capsule>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.8</mu>
+              <mu2>0.8</mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <kp>1000000.0</kp>
+              <kd>100.0</kd>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+    </link>
+  </model>
+</sdf>

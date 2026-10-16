@@ -1,0 +1,64 @@
+{
+  "version": "1.0",
+  "name": "Patrulla Multi-Actor (3 Trabajadores)",
+  "description": "Tres trabajadores realizando tareas de inspección con trayectorias y rutinas coordinadas.",
+  "actors_count": 3,
+  "actors": [
+    {
+      "name": "worker_center",
+      "display_name": "Trabajador Central",
+      "color": "#10b981",
+      "speed": 0.65,
+      "mode": "loop",
+      "teleop_idle_action": "talk",
+      "x": 3.0,
+      "y": 0.0,
+      "z": null,
+      "manual_z_offset": 0.0,
+      "yaw": 0.0,
+      "waypoints": [
+        {"id": 1, "x": 3.0, "y": 0.0, "wait_time": 4.0, "speed": 0.65, "action": "talk", "label": "Inicio"},
+        {"id": 2, "x": 10.0, "y": 0.0, "wait_time": 3.0, "speed": 0.65, "action": "dance", "label": "Revisión 1"},
+        {"id": 3, "x": 18.0, "y": 0.0, "wait_time": 5.0, "speed": 0.65, "action": "talk", "label": "Pausa"},
+        {"id": 4, "x": 25.0, "y": 0.0, "wait_time": 2.0, "speed": 0.65, "action": "idle", "label": "Final"}
+      ]
+    },
+    {
+      "name": "worker_left",
+      "display_name": "Trabajador Lateral Norte",
+      "color": "#3b82f6",
+      "speed": 0.60,
+      "mode": "ping_pong",
+      "teleop_idle_action": "idle",
+      "x": 5.0,
+      "y": 3.0,
+      "z": null,
+      "manual_z_offset": 0.0,
+      "yaw": 0.0,
+      "waypoints": [
+        {"id": 1, "x": 5.0, "y": 3.0, "wait_time": 3.0, "speed": 0.60, "action": "idle", "label": "Punto N1"},
+        {"id": 2, "x": 15.0, "y": 3.0, "wait_time": 6.0, "speed": 0.60, "action": "talk", "label": "Punto N2"},
+        {"id": 3, "x": 22.0, "y": 3.0, "wait_time": 3.0, "speed": 0.60, "action": "idle", "label": "Punto N3"}
+      ]
+    },
+    {
+      "name": "worker_right",
+      "display_name": "Trabajador Lateral Sur",
+      "color": "#f59e0b",
+      "speed": 0.70,
+      "mode": "loop",
+      "teleop_idle_action": "talk",
+      "x": 4.0,
+      "y": -3.0,
+      "z": null,
+      "manual_z_offset": 0.0,
+      "yaw": 0.0,
+      "waypoints": [
+        {"id": 1, "x": 4.0, "y": -3.0, "wait_time": 2.0, "speed": 0.70, "action": "talk", "label": "Punto S1"},
+        {"id": 2, "x": 12.0, "y": -3.0, "wait_time": 4.0, "speed": 0.70, "action": "idle", "label": "Punto S2"},
+        {"id": 3, "x": 20.0, "y": -3.0, "wait_time": 3.0, "speed": 0.70, "action": "dance", "label": "Punto S3"}
+      ]
+    }
+  ]
+}
+

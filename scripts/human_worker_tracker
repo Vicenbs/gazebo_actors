@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""
+Backwards-compatibility wrapper for actor_tracker.
+"""
+
+import os
+import runpy
+
+if __name__ == "__main__":
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "actor_tracker")
+    runpy.run_path(script_path, run_name="__main__")

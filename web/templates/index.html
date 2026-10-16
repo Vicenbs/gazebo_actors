@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gazebo Actors — Gestor & Secuenciador</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Header principal -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5" r="3"></circle>
+          <path d="M12 8v8"></path>
+          <path d="M8 12l4 4 4-4"></path>
+          <circle cx="6" cy="19" r="2"></circle>
+          <circle cx="18" cy="19" r="2"></circle>
+          <path d="M8 19h8"></path>
+        </svg>
+      </div>
+      <div class="header-brand">
+        <h1 class="app-title"><span data-i18n="app_title">Gazebo Actors</span> <span class="app-subtitle" data-i18n="app_subtitle">| Gestor &amp; Secuenciador</span></h1>
+        <p class="app-caption">{{ environment_name|default('Simulación Gazebo Sim Harmonic') }} &bull; ROS 2 Jazzy</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <!-- Selector de Idioma / Language Selector -->
+      <div class="header-lang-wrap">
+        <label for="lang-select" class="lang-label" title="Idioma / Language">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </label>
+        <select id="lang-select" class="lang-select" onchange="applyLanguage(this.value)" title="Idioma / Language">
+          <option value="es">ES</option>
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+          <option value="fr">FR</option>
+          <option value="pt">PT</option>
+          <option value="it">IT</option>
+        </select>
+      </div>
+
+      <div class="header-config-group">
+        <button class="btn btn-sm btn-config" onclick="openSaveConfigModal()" data-i18n-title="btn_save_config">
+          <span data-i18n="btn_save_config">Guardar</span>
+        </button>
+        <button class="btn btn-sm btn-config" onclick="openLoadConfigModal()" data-i18n-title="btn_load_config">
+          <span data-i18n="btn_load_config">Cargar</span>
+        </button>
+      </div>
+      <div class="status-pill connected" id="connection-pill">
+        <span class="status-dot"></span>
+        <span id="connection-text" data-i18n="sim_status_active">Simulación Activa</span>
+      </div>
+      <div class="status-pill metric-pill">
+        <span><span data-i18n="sim_time_label">Tiempo Sim:</span> <strong id="sim-time-val">0.0s</strong></span>
+      </div>
+      <div class="status-pill metric-pill">
+        <span><span data-i18n="actors_count_label">Actores:</span> <strong id="actors-count-val">1</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Pestañas de Navegación -->
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-tab="tab-actors" id="btn-tab-actors">
+      <span data-i18n="tab_actors">Actores & Spawner</span>
+    </button>
+    <button class="nav-tab" data-tab="tab-sequencer" id="btn-tab-sequencer">
+      <span data-i18n="tab_sequencer">Secuenciador de Rutas</span>
+    </button>
+    <button class="nav-tab" data-tab="tab-teleop" id="btn-tab-teleop">
+      <span data-i18n="tab_teleop">Teleoperación & Cinemática</span>
+    </button>
+  </nav>
+
+  <!-- Contenedor Principal de Pestañas -->
+  <main class="main-content">
+    
+    <!-- ======================================================== -->
+    <!-- PESTAÑA 1: GESTIÓN DE ACTORES                            -->
+    <!-- ======================================================== -->
+    <section class="tab-pane active" id="tab-actors">
+      <div class="two-col-layout">
+        
+        <!-- Formulario: Añadir Actor -->
+        <div class="panel form-panel">
+          <h2 class="panel-title"><span data-i18n="panel_add_actor_title">Añadir Nuevo Actor</span></h2>
+          <p class="panel-desc" data-i18n="panel_add_actor_desc">Configura las coordenadas iniciales, velocidad y color distintivo para instanciar un actor en la simulación Gazebo.</p>
+
+          <form id="add-actor-form" onsubmit="event.preventDefault(); addActorSubmit();">
+            <div class="form-group">
+              <label for="new-actor-name" data-i18n="label_actor_name">Identificador del Actor:</label>
+              <input type="text" id="new-actor-name" placeholder="ej. trabajador_2, maria, inspector" data-i18n-placeholder="placeholder_actor_name" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <div class="label-val-row">
+                  <label for="new-actor-x" data-i18n="label_coord_x">X (m):</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" id="new-actor-x" min="0.0" max="30.0" step="0.1" value="4.5" oninput="updateNumberRange('new-actor-x', 'new-actor-x-range')">
+                    <span class="unit-tag">m</span>
+                  </div>
+                </div>
+                <input type="range" id="new-actor-x-range" min="1.0" max="25.0" step="0.5" value="4.5" class="full-slider" oninput="updateRangeText('new-actor-x-range', 'new-actor-x')">
+              </div>
+              <div class="form-group col-6">
+                <div class="label-val-row">
+                  <label for="new-actor-y" data-i18n="label_coord_y">Y (m):</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" id="new-actor-y" min="-8.0" max="8.0" step="0.1" value="3.0" oninput="updateNumberRange('new-actor-y', 'new-actor-y-range')">
+                    <span class="unit-tag">m</span>
+                  </div>
+                </div>
+                <input type="range" id="new-actor-y-range" min="-6.0" max="6.0" step="0.5" value="3.0" class="full-slider" oninput="updateRangeText('new-actor-y-range', 'new-actor-y')">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <div class="label-val-row">
+                  <label for="new-actor-z" data-i18n="label_coord_z">Z (m, opcional):</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" id="new-actor-z" step="0.1" placeholder="Auto" data-i18n-placeholder="placeholder_coord_z" data-i18n-title="title_coord_z">
+                    <span class="unit-tag">m</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group col-6">
+                <div class="label-val-row">
+                  <label for="new-actor-speed" data-i18n="label_speed">Velocidad Base (m/s):</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" id="new-actor-speed" min="0.2" max="2.0" step="0.05" value="0.65" oninput="updateNumberRange('new-actor-speed', 'new-actor-speed-range')">
+                    <span class="unit-tag">m/s</span>
+                  </div>
+                </div>
+                <input type="range" id="new-actor-speed-range" min="0.3" max="1.5" step="0.05" value="0.65" class="full-slider" oninput="updateRangeText('new-actor-speed-range', 'new-actor-speed')">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label data-i18n="label_color">Color Distintivo:</label>
+              <div class="color-palette-box">
+                <div class="color-palette">
+                  <label class="color-radio" style="background:#10b981" title="Verde" data-i18n-title="color_green"><input type="radio" name="actor-color" value="#10b981" checked></label>
+                  <label class="color-radio" style="background:#3b82f6" title="Azul" data-i18n-title="color_blue"><input type="radio" name="actor-color" value="#3b82f6"></label>
+                  <label class="color-radio" style="background:#f59e0b" title="Naranja" data-i18n-title="color_orange"><input type="radio" name="actor-color" value="#f59e0b"></label>
+                  <label class="color-radio" style="background:#8b5cf6" title="Púrpura" data-i18n-title="color_purple"><input type="radio" name="actor-color" value="#8b5cf6"></label>
+                  <label class="color-radio" style="background:#ef4444" title="Rojo"><input type="radio" name="actor-color" value="#ef4444"></label>
+                  <label class="color-custom-btn" title="Personalizado" data-i18n-title="color_custom">
+                    <input type="color" id="actor-custom-color" value="#06b6d4" onchange="onCustomColorPick(this.value)">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="btn-spawn-actor">
+              <span data-i18n="btn_spawn_actor">Spawnear Actor en Gazebo</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Lista de Actores Activos -->
+        <div class="panel list-panel">
+          <div class="panel-header-inline">
+            <h2 class="panel-title"><span data-i18n="panel_active_actors_title">Actores Activos en Simulación</span></h2>
+            <div class="header-btn-group">
+              <button class="btn btn-sm btn-outline" onclick="openSaveConfigModal()" data-i18n-title="btn_save_config"><span data-i18n="btn_save_config">Guardar</span></button>
+              <button class="btn btn-sm btn-outline" onclick="openLoadConfigModal()" data-i18n-title="btn_load_config"><span data-i18n="btn_load_config">Cargar</span></button>
+              <button class="btn btn-sm btn-outline" onclick="respawnDefaultActor()"><span data-i18n="btn_reset_default">Restablecer Predeterminado</span></button>
+            </div>
+          </div>
+
+          <p class="panel-desc" data-i18n="panel_active_actors_desc">Monitoreo en tiempo real de entidades instanciadas, cinemática y control individual.</p>
+
+          <div class="actors-card-grid" id="actors-card-grid">
+            <!-- Rellenado dinámicamente con JavaScript -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- PESTAÑA 2: SECUENCIADOR DE WAYPOINTS & MAPA 2D           -->
+    <!-- ======================================================== -->
+    <section class="tab-pane" id="tab-sequencer">
+      
+      <!-- Barra de Control Principal (Top Control Deck) -->
+      <div class="sequencer-topbar">
+        <!-- Grupo Izquierdo: Selección de Actor Activo -->
+        <div class="sequencer-topbar-left">
+          <label for="sequencer-actor-select"><strong data-i18n="label_sequencer_actor">Actor Activo:</strong></label>
+          <select id="sequencer-actor-select" onchange="onSelectedActorChanged(); this.blur();">
+            <option value="" data-i18n="no_actors_option">-- Sin actores en simulación --</option>
+          </select>
+        </div>
+
+        <!-- Grupo Central: Controles de Reproducción y Modo -->
+        <div class="sequencer-topbar-center">
+          <div class="playback-btn-group">
+            <button class="btn btn-success btn-sm" id="btn-seq-play" onclick="controlSequence('start')">▶ Iniciar</button>
+            <button class="btn btn-warning btn-sm" id="btn-seq-pause" onclick="controlSequence('pause')">⏸ Pausar</button>
+            <button class="btn btn-danger btn-sm" id="btn-seq-stop" onclick="controlSequence('stop')">⏹ Detener</button>
+            <button class="btn btn-secondary btn-sm" id="btn-seq-step" onclick="controlSequence('step')">⏭ Paso</button>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm active" id="btn-mode-loop" onclick="setMode('loop')" data-i18n-title="title_mode_loop" data-i18n="btn_mode_loop">Bucle</button>
+            <button class="btn btn-outline btn-sm" id="btn-mode-pingpong" onclick="setMode('ping_pong')" data-i18n-title="title_mode_pingpong" data-i18n="btn_mode_pingpong">Ida/Vuelta</button>
+            <button class="btn btn-outline btn-sm" id="btn-mode-once" onclick="setMode('once')" data-i18n-title="title_mode_once" data-i18n="btn_mode_once">Paso Único</button>
+          </div>
+        </div>
+
+        <!-- Grupo Derecho: Presets y Estado en Vivo -->
+        <div class="sequencer-topbar-right">
+          <div class="presets-quick-box">
+            <span class="presets-label" data-i18n="presets_quick_label">Presets:</span>
+            <button class="btn btn-xs btn-ghost" onclick="loadPreset('linear_patrol')" data-i18n="preset_linear">Lineal</button>
+            <button class="btn btn-xs btn-ghost" onclick="loadPreset('square_patrol')" data-i18n="preset_square">Cuadrado</button>
+            <button class="btn btn-xs btn-ghost" onclick="loadPreset('zigzag')" data-i18n="preset_zigzag">Zigzag</button>
+          </div>
+
+          <span class="badge state-badge" id="seq-state-badge">Estado: Navegando</span>
+          <span class="badge mode-badge" id="seq-mode-badge" style="display:none">Modo: Bucle</span>
+        </div>
+      </div>
+
+      <div class="sequencer-layout">
+        
+        <!-- Columna Izquierda: Mapa 2D Canvas -->
+        <div class="map-column">
+          <div class="map-header">
+            <h3 class="map-title" data-i18n="map_title">Mapa 2D de la Simulación</h3>
+            <div class="map-hint"><em data-i18n="map_hint">Haz clic en cualquier punto para añadir un waypoint interactivo</em></div>
+          </div>
+
+          <div class="canvas-container" id="canvas-container">
+            <canvas id="vineyard-map-canvas" width="800" height="420"></canvas>
+            <div class="canvas-coord-badge" id="canvas-coord-badge">X: 0.0m | Y: 0.0m | Z: 0.0m</div>
+          </div>
+
+          <div class="map-legend">
+            <div class="legend-item"><span class="legend-swatch row-swatch"></span> <span data-i18n="legend_terrain">Cuadrícula / Terreno</span></div>
+            <div class="legend-item"><span class="legend-swatch robot-swatch"></span> <span data-i18n="legend_robot">Robot</span></div>
+            <div class="legend-item"><span class="legend-swatch actor-swatch"></span> <span data-i18n="legend_actor">Actor Seleccionado</span></div>
+            <div class="legend-item"><span class="legend-swatch wp-swatch"></span> <span data-i18n="legend_waypoint">Waypoint Secuenciado</span></div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Panel de Waypoints -->
+        <div class="waypoints-column">
+          <div class="panel-header-inline">
+            <h3 class="panel-title-sm"><span data-i18n="panel_waypoints_title">Secuencia de Waypoints</span> (<span id="wp-count-text">0</span>)</h3>
+            <button class="btn btn-sm btn-danger-outline" onclick="clearAllWaypoints()" data-i18n="btn_clear_all_wp">Limpiar Todo</button>
+          </div>
+
+          <div class="table-scroll-container">
+            <table class="wp-table" id="wp-table">
+              <thead>
+                <tr>
+                  <th style="width:34px;text-align:center" data-i18n="th_index">#</th>
+                  <th style="width:58px" data-i18n="th_x">X (m)</th>
+                  <th style="width:58px" data-i18n="th_y">Y (m)</th>
+                  <th style="width:58px" data-i18n="th_z">Z (m)</th>
+                  <th style="width:85px;text-align:center" data-i18n="th_wait">Espera</th>
+                  <th style="min-width:115px" data-i18n="th_action">Acción</th>
+                  <th style="width:58px;text-align:center" data-i18n="th_speed">Vel</th>
+                  <th style="width:36px;text-align:center"></th>
+                </tr>
+              </thead>
+              <tbody id="wp-table-body">
+                <!-- Filas generadas dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Añadir waypoint manual organizado -->
+          <div class="quick-add-box">
+            <h4 class="quick-add-title" data-i18n="quick_add_title">Añadir Coordenada Manual:</h4>
+            <div class="quick-add-grid">
+              <div class="quick-add-field">
+                <label for="quick-wp-x" data-i18n="quick_add_label_x">X:</label>
+                <div class="input-unit-wrap sm">
+                  <input type="number" id="quick-wp-x" placeholder="X" step="0.5" value="8.0">
+                  <span class="unit-tag-sm">m</span>
+                </div>
+              </div>
+              <div class="quick-add-field">
+                <label for="quick-wp-y" data-i18n="quick_add_label_y">Y:</label>
+                <div class="input-unit-wrap sm">
+                  <input type="number" id="quick-wp-y" placeholder="Y" step="0.5" value="0.0">
+                  <span class="unit-tag-sm">m</span>
+                </div>
+              </div>
+              <div class="quick-add-field">
+                <label for="quick-wp-z" data-i18n="quick_add_label_z">Z:</label>
+                <div class="input-unit-wrap sm">
+                  <input type="number" id="quick-wp-z" placeholder="Auto" data-i18n-placeholder="quick_add_placeholder_z" step="0.2">
+                  <span class="unit-tag-sm">m</span>
+                </div>
+              </div>
+              <div class="quick-add-field">
+                <label for="quick-wp-wait" data-i18n="quick_add_label_wait">Espera:</label>
+                <div class="input-unit-wrap sm">
+                  <input type="number" id="quick-wp-wait" placeholder="s" step="0.5" value="4.0">
+                  <span class="unit-tag-sm">s</span>
+                </div>
+              </div>
+              <div class="quick-add-field quick-add-field-action">
+                <label for="quick-wp-action" data-i18n="quick_add_label_action">Acción:</label>
+                <select id="quick-wp-action" onchange="this.blur()">
+                  <option value="idle" data-i18n="action_idle">Parado</option>
+                  <option value="dance" data-i18n="action_dance">Bailar</option>
+                  <option value="talk" data-i18n="action_talk">Hablar</option>
+                </select>
+              </div>
+              <div class="quick-add-field">
+                <label for="quick-wp-speed" data-i18n="quick_add_label_speed">Vel:</label>
+                <div class="input-unit-wrap sm">
+                  <input type="number" id="quick-wp-speed" placeholder="m/s" step="0.05" value="0.65">
+                  <span class="unit-tag-sm">m/s</span>
+                </div>
+              </div>
+              <div class="quick-add-btn-wrap">
+                <button class="btn btn-sm btn-primary" onclick="addManualWaypoint()" data-i18n="btn_quick_add_wp">Añadir</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- PESTAÑA 3: TELEOPERACIÓN & CINEMÁTICA                    -->
+    <!-- ======================================================== -->
+    <section class="tab-pane" id="tab-teleop">
+      <div class="two-col-layout">
+
+        <!-- Control Manual -->
+        <div class="panel teleop-panel">
+          <h2 class="panel-title"><span data-i18n="panel_teleop_title">Conducción Manual del Actor (3D)</span></h2>
+          <p class="panel-desc" data-i18n="panel_teleop_desc">Toma el control interactivo. Usa W / A / S / D para desplazarte en el plano, y Q / E para descender o elevar la altura (Z) en cualquier mapa.</p>
+
+          <div class="teleop-settings-box">
+            <div class="form-group">
+              <label for="teleop-actor-select"><strong data-i18n="label_teleop_actor">Actor a teleoperar:</strong></label>
+              <select id="teleop-actor-select" onchange="document.getElementById('sequencer-actor-select').value = this.value; onSelectedActorChanged(); this.blur();">
+                <option value="" data-i18n="no_actors_option">-- Sin actores en simulación --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="teleop-idle-action-select">
+                <strong data-i18n="label_teleop_idle_action">Animación en reposo (Espacio / Stop):</strong>
+              </label>
+              <div class="teleop-anim-selector-row">
+                <select id="teleop-idle-action-select" onchange="onTeleopIdleActionChanged(this.value); this.blur();">
+                  <option value="idle" data-i18n="action_idle">Parado</option>
+                  <option value="dance" data-i18n="action_dance">Bailar</option>
+                  <option value="talk" data-i18n="action_talk">Hablar</option>
+                </select>
+                <div class="teleop-quick-anim-btns">
+                  <button type="button" class="btn btn-sm btn-ghost teleop-quick-anim-btn" data-anim="idle" onclick="selectTeleopAnim('idle')" data-i18n="btn_anim_idle">Parado</button>
+                  <button type="button" class="btn btn-sm btn-ghost teleop-quick-anim-btn" data-anim="dance" onclick="selectTeleopAnim('dance')" data-i18n="btn_anim_dance">Bailar</button>
+                  <button type="button" class="btn btn-sm btn-ghost teleop-quick-anim-btn" data-anim="talk" onclick="selectTeleopAnim('talk')" data-i18n="btn_anim_talk">Hablar</button>
+                </div>
+                <span class="teleop-anim-live-badge" id="teleop-anim-live-badge">
+                  Animación: Parado
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controles 3D integrados: D-Pad Plano (WASD) + Elevación Vertical (QE) -->
+          <div class="teleop-3d-layout">
+            <div class="dpad-container">
+              <div class="dpad-row">
+                <button class="btn dpad-btn" id="dpad-up" onmousedown="isDpadActive=true; startTeleop(0.7, 0.0)" onmouseup="isDpadActive=false; stopTeleop()" onmouseleave="if(isDpadActive){isDpadActive=false; stopTeleop();}" ontouchstart="startTeleop(0.7, 0.0)" ontouchend="stopTeleop()">
+                  ↑<span class="key-hint">W</span>
+                </button>
+              </div>
+              <div class="dpad-row">
+                <button class="btn dpad-btn" id="dpad-left" onmousedown="isDpadActive=true; startTeleop(0.0, 0.9)" onmouseup="isDpadActive=false; stopTeleop()" onmouseleave="if(isDpadActive){isDpadActive=false; stopTeleop();}" ontouchstart="startTeleop(0.0, 0.9)" ontouchend="stopTeleop()">
+                  ←<span class="key-hint">A</span>
+                </button>
+                <button class="btn dpad-btn stop-btn" id="dpad-stop" onclick="stopAllTeleop()">
+                  Stop<span class="key-hint">Espacio</span>
+                </button>
+                <button class="btn dpad-btn" id="dpad-right" onmousedown="isDpadActive=true; startTeleop(0.0, -0.9)" onmouseup="isDpadActive=false; stopTeleop()" onmouseleave="if(isDpadActive){isDpadActive=false; stopTeleop();}" ontouchstart="startTeleop(0.0, -0.9)" ontouchend="stopTeleop()">
+                  →<span class="key-hint">D</span>
+                </button>
+              </div>
+              <div class="dpad-row">
+                <button class="btn dpad-btn" id="dpad-down" onmousedown="isDpadActive=true; startTeleop(-0.5, 0.0)" onmouseup="isDpadActive=false; stopTeleop()" onmouseleave="if(isDpadActive){isDpadActive=false; stopTeleop();}" ontouchstart="startTeleop(-0.5, 0.0)" ontouchend="stopTeleop()">
+                  ↓<span class="key-hint">S</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Columna Vertical de Elevación Z (Q / E) -->
+            <div class="vert-pad-container">
+              <div class="vert-pad-header">
+                <span class="vert-title" data-i18n="teleop_z_height">Altura Z</span>
+                <span class="vert-z-val" id="teleop-z-badge">0.00 m</span>
+              </div>
+              <button class="btn vert-btn up-z-btn" id="btn-up-z" onmousedown="isDpadActive=true; startTeleopVert(0.6)" onmouseup="isDpadActive=false; stopTeleopVert()" onmouseleave="if(isDpadActive){isDpadActive=false; stopTeleopVert();}" ontouchstart="startTeleopVert(0.6)" ontouchend="stopTeleopVert()">
+                <span data-i18n="btn_up_z">Subir</span><span class="key-hint">E</span>
+              </button>
+              <button class="btn vert-btn down-z-btn" id="btn-down-z" onmousedown="isDpadActive=true; startTeleopVert(-0.6)" onmouseup="isDpadActive=false; stopTeleopVert()" onmouseleave="if(isDpadActive){isDpadActive=false; stopTeleopVert();}" ontouchstart="startTeleopVert(-0.6)" ontouchend="stopTeleopVert()">
+                <span data-i18n="btn_down_z">Bajar</span><span class="key-hint">Q</span>
+              </button>
+
+              <div class="z-quick-adjust">
+                <button class="btn btn-sm btn-ghost" onclick="stepActorZ(0.2)" title="Subir 20 cm">+0.2m</button>
+                <button class="btn btn-sm btn-ghost" onclick="stepActorZ(-0.2)" title="Bajar 20 cm">-0.2m</button>
+                <button class="btn btn-sm btn-secondary" onclick="resetActorZ()" data-i18n-title="title_ground_z" data-i18n="btn_ground_z">Suelo</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group teleop-speed-group">
+            <div class="label-val-row">
+              <label for="teleop-speed-slider" data-i18n="label_manual_speed">Velocidad Manual:</label>
+              <span class="teleop-speed-val" id="teleop-speed-label">0.70 m/s</span>
+            </div>
+            <input type="range" id="teleop-speed-slider" min="0.3" max="1.4" step="0.05" value="0.70" class="full-slider" oninput="document.getElementById('teleop-speed-label').innerText = parseFloat(this.value).toFixed(2) + ' m/s'" onchange="this.blur()">
+          </div>
+        </div>
+
+        <!-- Telemetría y Cinemática en Vivo -->
+        <div class="panel safety-panel">
+          <h2 class="panel-title"><span data-i18n="panel_telemetry_title">Cinemática y Telemetría en Vivo</span></h2>
+          <p class="panel-desc" data-i18n="panel_telemetry_desc">Monitoreo en tiempo real de posición 3D, rumbo, velocidades y proximidad al robot en Gazebo Sim.</p>
+
+          <div class="safety-metrics-grid">
+            
+            <div class="metric-card">
+              <div class="metric-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
+              <div class="metric-info">
+                <span class="metric-label" data-i18n="metric_pos_title">Posición Global (X, Y, Z)</span>
+                <span class="metric-value" id="teleop-pos-val">X: 0.00 | Y: 0.00 | Z: 0.00 m</span>
+                <span class="metric-sub" id="teleop-pos-sub" data-i18n="metric_pos_frame">Marco de referencia: map</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                </svg>
+              </div>
+              <div class="metric-info">
+                <span class="metric-label" data-i18n="metric_yaw_title">Orientación y Rumbo (Yaw)</span>
+                <span class="metric-value" id="teleop-yaw-val">0.0°</span>
+                <span class="metric-sub" id="teleop-yaw-sub">0.00 rad</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <div class="metric-info">
+                <span class="metric-label" data-i18n="metric_vel_title">Velocidad Lineal & Angular</span>
+                <span class="metric-value" id="teleop-vel-val">0.00 m/s</span>
+                <span class="metric-sub" id="teleop-angvel-sub">Rotación: 0.00 rad/s</span>
+              </div>
+            </div>
+
+            <div class="metric-card" id="robot-dist-card">
+              <div class="metric-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                  <circle cx="12" cy="5" r="2"></circle>
+                  <path d="M12 7v4"></path>
+                  <line x1="8" y1="16" x2="8.01" y2="16"></line>
+                  <line x1="16" y1="16" x2="16.01" y2="16"></line>
+                </svg>
+              </div>
+              <div class="metric-info">
+                <span class="metric-label" data-i18n="metric_state_title">Estado de Navegación & Robot</span>
+                <span class="metric-value" id="teleop-state-val">IDLE</span>
+                <span class="metric-sub" id="teleop-robot-sub">Robot: Sin odometría</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+  </main>
+
+  <!-- Pie de página con autor y enlaces -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <span class="footer-app-name">Gazebo Actors</span> &bull; 
+        <span><span data-i18n="footer_developed_by">Desarrollado por</span> <strong>Vicente Barreiro Serrano</strong></span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Vicenbs" target="_blank" rel="noopener noreferrer" class="footer-link" title="Perfil de GitHub de Vicente Barreiro Serrano">
+          <svg class="footer-icon" height="15" width="15" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span>GitHub: @Vicenbs</span>
+        </a>
+        <a href="https://orcid.org/0009-0007-6932-1872" target="_blank" rel="noopener noreferrer" class="footer-link" title="Identificador ORCID: 0009-0007-6932-1872">
+          <svg class="footer-icon" height="15" width="15" viewBox="0 0 256 256">
+            <path d="M256 128c0 70.7-57.3 128-128 128S0 198.7 0 128 57.3 0 128 0s128 57.3 128 128z" fill="#a6ce39"/>
+            <path d="M86.3 186.2H70.9V79.1h15.4v107.1zM78.6 65.7c-5.4 0-9.8-4.4-9.8-9.8s4.4-9.8 9.8-9.8 9.8 4.4 9.8 9.8-4.4 9.8-9.8 9.8zM120.8 186.2h-15.4V79.1h15.4v10.4c5.2-7.1 13.9-12.4 25.1-12.4 22.9 0 37.3 17.5 37.3 43.8 0 26.6-14.7 44.8-37.5 44.8-11.4 0-19.8-5.3-24.9-12v12.5zm18.9-15.6c13.7 0 22.7-11.4 22.7-28.5s-9-28.6-22.7-28.6c-13.8 0-22.8 11.3-22.8 28.6s9 28.5 22.8 28.5z" fill="#fff"/>
+          </svg>
+          <span>ORCID</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================== -->
+  <!-- MODALES DE CONFIGURACIÓN Y PERSISTENCIA (GUARDAR / CARGAR) -->
+  <!-- ======================================================== -->
+
+  <!-- Modal Guardar Configuración -->
+  <div class="modal-backdrop" id="modal-save-config" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="modal_save_title">Guardar Configuración de Escenario</h3>
+        <button class="modal-close-btn" onclick="closeSaveConfigModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" data-i18n="modal_save_desc">
+          Guarda la lista completa de actores activos, colores, velocidades, posiciones iniciales 3D y secuencias de waypoints para reutilizarlas en la app o lanzarlas directamente desde <code>ros2 launch</code> con <code>scenario_file:=...</code>.
+        </p>
+
+        <div class="modal-section-card">
+          <h4>Opción 1: Descargar archivo JSON</h4>
+          <p class="form-help">Descarga el archivo <code>.json</code> directamente a tu ordenador para guardarlo localmente o versionarlo.</p>
+          <button class="btn btn-primary btn-block" onclick="downloadScenarioJson()" style="margin-top: 0.6rem;">
+            <span data-i18n="btn_download_json">Descargar Configuración (.json)</span>
+          </button>
+        </div>
+
+        <div class="modal-section-card" style="margin-top: 1rem;">
+          <h4>Opción 2: Guardar como Preset en el Servidor</h4>
+          <p class="form-help">Guarda la configuración en la carpeta <code>config/</code> del paquete para tenerla disponible inmediatamente en el dropdown de presets y en launch.</p>
+          <div class="form-group" style="margin-top: 0.6rem;">
+            <label for="preset-save-name" data-i18n="label_preset_name">Nombre del archivo preset:</label>
+            <input type="text" id="preset-save-name" placeholder="ej. patrulla_vinedo.json" style="width: 100%;">
+          </div>
+          <button class="btn btn-secondary btn-block" onclick="savePresetOnServer()" style="margin-top: 0.6rem;">
+            <span data-i18n="btn_save_server">Guardar Preset en Servidor</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeSaveConfigModal()" data-i18n="btn_cancel">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cargar Configuración -->
+  <div class="modal-backdrop" id="modal-load-config" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" data-i18n="modal_load_title">Cargar Configuración de Escenario</h3>
+        <button class="modal-close-btn" onclick="closeLoadConfigModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" data-i18n="modal_load_desc">
+          Carga un escenario completo de actores. Se sustituirán los actores actuales en Gazebo por los definidos en la configuración seleccionada.
+        </p>
+
+        <div class="modal-section-card">
+          <h4>Opción 1: Subir Archivo JSON desde tu Equipo</h4>
+          <p class="form-help">Selecciona un archivo <code>.json</code> guardado en tu ordenador.</p>
+          <button class="btn btn-primary btn-block" onclick="triggerFileInput()" style="margin-top: 0.6rem;">
+            Examinar Archivo JSON Local...
+          </button>
+        </div>
+
+        <div class="modal-section-card" style="margin-top: 1rem;">
+          <h4>Opción 2: Cargar Preset del Servidor</h4>
+          <p class="form-help">Selecciona una de las configuraciones guardadas en el paquete.</p>
+          <div class="form-group" style="margin-top: 0.6rem;">
+            <label for="preset-config-select" data-i18n="label_presets_server">Preset disponible:</label>
+            <select id="preset-config-select" style="width: 100%;">
+              <option value="">-- Buscando presets... --</option>
+            </select>
+          </div>
+          <button class="btn btn-success btn-block" onclick="loadSelectedPreset()" style="margin-top: 0.6rem;" id="btn-load-preset">
+            <span data-i18n="btn_load_preset">Cargar Preset Seleccionado</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeLoadConfigModal()" data-i18n="btn_cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input de archivo oculto para selección nativa de archivo JSON -->
+  <input type="file" id="config-file-hidden-input" accept=".json,application/json" style="display: none;" onchange="handleFileSelected(event)">
+
+  <!-- Contenedor para notificaciones Toast -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts del frontend (Diccionario de internacionalización + Lógica reactiva) -->
+  <script src="/static/js/translations.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+

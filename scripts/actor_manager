@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""
+Actor Manager & Waypoint Sequencer Node with Integrated Web UI.
+Entry point executable for Gazebo Actors.
+"""
+
+import atexit
+import os
+import signal
+import sys
+import threading
+
+# Allow running directly from source directory prior to colcon installation
+_src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
+import rclpy
+from rclpy.executors import ExternalShutdownException
+
+from gazebo_actors import (
+    ActorManagerNode,
+    configure_gazebo_environment,
+    create_flask_app,
+    free_port
+)
+
+
+def main(args=None):
+    # Configure Gazebo Sim environment paths
+    configure_gazebo_environment()
+
+    # Initialize ROS 2
+    rclpy.init(args=args)
+    node = ActorManagerNode()
+
+    # Register signal and exit handlers to guarantee Gazebo actor cleanup on launch stop / Ctrl+C
+    def cleanup_handler(signum=None, frame=None):
+        try:
+            node.cleanup_all_actors()
+        except Exception:
+            pass
+        raise KeyboardInterrupt()
+
+    try:
+        signal.signal(signal.SIGINT, cleanup_handler)
+        signal.signal(signal.SIGTERM, cleanup_handler)
+    except Exception:
+        pass
+    atexit.register(node.cleanup_all_actors)
+
+    # Free web port if occupied by previous session
+    free_port(node.web_port)
+
+    # Launch embedded Flask dashboard in daemon thread
+    flask_app = create_flask_app(node)
+    server_thread = threading.Thread(
+        target=lambda: flask_app.run(
+            host="0.0.0.0",
+            port=node.web_port,
+            threaded=True,
+            use_reloader=False
+        ),
+        daemon=True
+    )
+    server_thread.start()
+
+    # Main ROS 2 spin loop
+    try:
+        rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
+    except Exception as e:
+        node.get_logger().error(f"Error en bucle de ejecución: {e}")
+    finally:
+        try:
+            node.cleanup_all_actors()
+        except Exception:
+            pass
+        try:
+            node.destroy_node()
+        except Exception:
+            pass
+        if rclpy.ok():
+            try:
+                rclpy.shutdown()
+            except Exception:
+                pass
+
+
+if __name__ == "__main__":
+    main()

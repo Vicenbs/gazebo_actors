@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "name": "Escenario Predeterminado (2 Actores)",
+  "description": "Dos trabajadores con secuencias de patrulla, pausas y animaciones en bucle e ida/vuelta.",
+  "actors_count": 2,
+  "actors": [
+    {
+      "name": "human_worker",
+      "display_name": "Trabajador 1",
+      "color": "#10b981",
+      "speed": 0.65,
+      "mode": "loop",
+      "teleop_idle_action": "talk",
+      "x": 4.5,
+      "y": 0.0,
+      "z": null,
+      "manual_z_offset": 0.0,
+      "yaw": 0.0,
+      "waypoints": [
+        {
+          "id": 1,
+          "x": 4.5,
+          "y": 0.0,
+          "wait_time": 3.0,
+          "speed": 0.65,
+          "action": "talk",
+          "label": "Inicio Hilera"
+        },
+        {
+          "id": 2,
+          "x": 10.5,
+          "y": 0.0,
+          "wait_time": 4.0,
+          "speed": 0.65,
+          "action": "dance",
+          "label": "Punto Central"
+        },
+        {
+          "id": 3,
+          "x": 16.0,
+          "y": 0.0,
+          "wait_time": 3.0,
+          "speed": 0.65,
+          "action": "idle",
+          "label": "Final Hilera"
+        }
+      ]
+    },
+    {
+      "name": "supervisor",
+      "display_name": "Supervisor",
+      "color": "#3b82f6",
+      "speed": 0.60,
+      "mode": "ping_pong",
+      "teleop_idle_action": "idle",
+      "x": 6.0,
+      "y": 3.0,
+      "z": null,
+      "manual_z_offset": 0.0,
+      "yaw": 0.0,
+      "waypoints": [
+        {
+          "id": 1,
+          "x": 6.0,
+          "y": 3.0,
+          "wait_time": 2.0,
+          "speed": 0.60,
+          "action": "idle",
+          "label": "Control Hilera Superior"
+        },
+        {
+          "id": 2,
+          "x": 13.0,
+          "y": 3.0,
+          "wait_time": 5.0,
+          "speed": 0.60,
+          "action": "talk",
+          "label": "Revisión Viña"
+        }
+      ]
+    }
+  ]
+}
+

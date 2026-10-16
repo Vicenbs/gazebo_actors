@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, academic work, or simulation experiments, please cite it as below."
+authors:
+  - given-names: "Vicente"
+    family-names: "Barreiro Serrano"
+    email: "vbars@unileon.es"
+    orcid: "https://orcid.org/0009-0007-6932-1872"
+title: "gazebo_actors: Dynamic Actor Management, Physical Collision Coupling, and Waypoint Sequencing for Gazebo Sim and ROS 2"
+version: 1.0.0
+date-released: 2026-10-15
+url: "https://github.com/Vicenbs/gazebo_actors"
+repository-code: "https://github.com/Vicenbs/gazebo_actors"
+license: Apache-2.0
+keywords:
+  - "ros2"
+  - "gazebo"
+  - "gazebo-sim"
+  - "human-robot-interaction"
+  - "actor-simulation"
+  - "robotics"
+  - "collision-detection"
+  - "waypoint-sequencing"
+
