@@ -8,6 +8,12 @@ Universal ROS 2 and Gazebo Sim package for dynamic actor management, rigid physi
 [![C++](https://img.shields.io/badge/Standard-C%2B%2B17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 
+<p align="center">
+  <img src="media/GZ_Dashboard_Seq.gif" alt="Gazebo Sim and Web Dashboard Co-simulation" width="100%"/>
+  <br>
+  <em>Interactive 2D waypoint sequencer with real-time actor co-simulation in Gazebo Sim.</em>
+</p>
+
 ---
 
 ## Overview
@@ -179,6 +185,12 @@ ros2 launch gazebo_actors flat_simulation.launch.py
 
 Once launched, navigate to `http://localhost:5000` in any web browser.
 
+<p align="center">
+  <img src="media/complete_demo.gif" alt="Embedded Web Dashboard and Actor Management" width="100%"/>
+  <br>
+  <em>Embedded Web Dashboard: Spawner interface, real-time telemetry cards, and multi-language controls.</em>
+</p>
+
 ### Actor Management
 * **Dynamic Spawning**: Form to spawn new actors with custom names, initial 3D positions, speed, and shirt/marker colors.
 * **Live Telemetry Cards**: Displays real-time coordinates $(X, Y, Z)$, yaw angle, linear velocity, navigation state, and proximity to the robot.
@@ -315,6 +327,12 @@ The C++ system plugin (`libGazeboActorFollower.so`) can also be embedded directl
   <animation_x_vel>2.0</animation_x_vel>
 </plugin>
 ```
+
+<p align="center">
+  <img src="media/collision_follow.gif" alt="Rigid Physical Collision Capsule Coupling" width="85%"/>
+  <br>
+  <em>Physical collision capsule body tightly locked to the animated skeletal mesh during real-time simulation.</em>
+</p>
 
 ---
 
