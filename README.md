@@ -9,9 +9,11 @@ Universal ROS 2 and Gazebo Sim package for dynamic actor management, rigid physi
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 
 <p align="center">
-  <img src="media/GZ_Dashboard_Seq.gif" alt="Gazebo Sim and Web Dashboard Co-simulation" width="100%"/>
+  <a href="media/GZ_Dashboard_Seq.gif">
+    <img src="media/GZ_Dashboard_Seq.png" alt="Gazebo Sim and Web Dashboard Co-simulation" width="100%"/>
+  </a>
   <br>
-  <em>Interactive 2D waypoint sequencer with real-time actor co-simulation in Gazebo Sim.</em>
+  <em>Interactive 2D waypoint sequencer with real-time actor co-simulation in Gazebo Sim (click image to view animated GIF).</em>
 </p>
 
 ---
@@ -186,9 +188,11 @@ ros2 launch gazebo_actors flat_simulation.launch.py
 Once launched, navigate to `http://localhost:5000` in any web browser.
 
 <p align="center">
-  <img src="media/complete_demo.gif" alt="Embedded Web Dashboard and Actor Management" width="100%"/>
+  <a href="media/complete_demo.gif">
+    <img src="media/complete_demo.png" alt="Embedded Web Dashboard and Actor Management" width="100%"/>
+  </a>
   <br>
-  <em>Embedded Web Dashboard: Spawner interface, real-time telemetry cards, and multi-language controls.</em>
+  <em>Embedded Web Dashboard: Spawner interface, real-time telemetry cards, and multi-language controls (click image to view animated GIF).</em>
 </p>
 
 ### Actor Management
@@ -329,9 +333,11 @@ The C++ system plugin (`libGazeboActorFollower.so`) can also be embedded directl
 ```
 
 <p align="center">
-  <img src="media/collision_follow.gif" alt="Rigid Physical Collision Capsule Coupling" width="85%"/>
+  <a href="media/collision_follow.gif">
+    <img src="media/collision_follow.png" alt="Rigid Physical Collision Capsule Coupling" width="85%"/>
+  </a>
   <br>
-  <em>Physical collision capsule body tightly locked to the animated skeletal mesh during real-time simulation.</em>
+  <em>Physical collision capsule body tightly locked to the animated skeletal mesh during real-time simulation (click image to view animated GIF).</em>
 </p>
 
 ---
