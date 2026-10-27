@@ -2,7 +2,7 @@
 
 Universal ROS 2 and Gazebo Sim package for dynamic actor management, rigid physical collision synchronization, skeletal animation coupling, and interactive waypoint sequencing across arbitrary simulation environments.
 
-[![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-22314E.svg)](https://docs.ros.org/en/jazzy/)
+[![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-brightgreen.svg)](https://docs.ros.org/en/jazzy/)
 [![Gazebo](https://img.shields.io/badge/Gazebo%20Sim-Harmonic-FF6F00.svg)](https://gazebosim.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![C++](https://img.shields.io/badge/Standard-C%2B%2B17-blue.svg)](https://en.cppreference.com/w/cpp/17)
